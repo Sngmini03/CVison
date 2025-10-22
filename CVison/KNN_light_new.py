@@ -18,7 +18,7 @@ TRAIN_DIR = os.path.join(ROOT, "train", "train")
 
 USE_HOG = True
 IMG_SIZE = (32, 32)
-K_VALUES = [1, 3, 5, 7, 9, 11, 15, 20]  # validation용 후보 k
+K_VALUES = [1, 3, 5, 7, 9, 11, 15, 20]
 BEST_K = 5  # 초기값
 
 # ==================== 이미지 처리 ====================
@@ -50,7 +50,7 @@ def extract_features(img_gray, use_hog=True):
         return raw
     h = hog(
         img_gray, orientations=9, pixels_per_cell=(8, 8),
-        cells_per_block=(2, 2), block_norm="L2-Hys", 
+        cells_per_block=(2, 2), block_norm="L2-Hys",
         transform_sqrt=True, feature_vector=True
     ).astype(np.float32)
     return np.concatenate([raw, h], axis=0)
@@ -113,7 +113,7 @@ def cross_validate_knn(X, y, k_values, n_folds=5):
         for k in k_values:
             knn = KNearestNeighbor(k=k)
             knn.train(X_train_fold, y_train_fold)
-            val_pred = knn.predict(X_val_fold)
+            val_pred = knn.predict(X_val_fold, show_progress=True)
             metrics = evaluate_model(y_val_fold, val_pred)
             results[k].append(metrics)
             print(f"k={k}: Acc={metrics['accuracy']:.4f}, F1={metrics['f1_score']:.4f}")
@@ -145,7 +145,8 @@ def main():
     for k in K_VALUES:
         knn = KNearestNeighbor(k=k)
         knn.train(X_train, y_train)
-        val_pred = knn.predict(X_val, show_progress=False)
+        # ✅ tqdm 진행률 표시 활성화
+        val_pred = knn.predict(X_val, show_progress=True)
         metrics = evaluate_model(y_val, val_pred)
         val_results[k] = metrics
         print(f"k={k}: Acc={metrics['accuracy']:.4f}, Prec={metrics['precision']:.4f}, "
